@@ -1838,3 +1838,6 @@ footer button {
 .winner-card { background:radial-gradient(ellipse at 50% 25%,#54347455,transparent 60%),linear-gradient(145deg,#1c1527,#0e0d15);border-color:#ad8bd357;box-shadow:0 30px 140px #000a,inset 0 1px #ffffff14; }
 @media(max-width:700px) { .hero { min-height:0; } .hero h1 { letter-spacing:-1px; } .hero::before { inset:0 -20px; } .canvas-controls { left:10px;right:10px;top:10px;gap:4px; } .canvas-controls > span { display:none; } .canvas-controls .export-tree { margin-right:auto; } .spectrum { gap:3px; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important;transition:none!important;scroll-behavior:auto!important; } }
+@media (max-width: 720px) {
+  .workspace > .setup-card { order: -1; }
+}
