@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bracketLayout, bracketSvg } from '../src/bracket-export.js';
+import { bracketLayout, bracketSvg, referenceLayout } from '../src/bracket-export.js';
 import { advance } from '../src/domain.js';
 for (const size of [16,32,64]) test(`${size} songs: symmetric tree exports every match and edge`,()=>{
  const t={version:1,songs:Array.from({length:size},(_,i)=>({id:String(i),name:`Song ${i}`,artist:'Artist',album:'Album'})),winners:{}};
@@ -25,4 +25,13 @@ for(const size of [16,32,64]) test(`${size} portrait tree fits fixed mobile widt
  assert.ok(l.height>l.width);assert.ok(l.height<16384);
  for(const n of l.nodes){assert.ok(n.x+510<=l.width);assert.ok(n.y+176<l.height);}
  for(let i=1;i<l.nodes.length;i++)assert.ok(l.nodes[i].y>=l.nodes[i-1].y+176);
+});
+
+test('reference tree keeps a balanced two-sided route to champion',()=>{
+ const t={songs:Array.from({length:16},(_,i)=>({id:String(i),name:`Song ${i}`,artist:'Artist'})),winners:{}};
+ const l=referenceLayout(t);
+ assert.equal(l.width,1080); assert.ok(l.height>=2300); assert.equal(l.leaves.length,16);
+ assert.equal(l.progress.length,14); assert.equal(l.progress.filter(x=>x.side==='left').length,7);
+ assert.equal(l.progress.filter(x=>x.side==='right').length,7);
+ assert.ok(l.leaves.every(n=>n.x>=0 && n.x+l.cardWidth<=l.width));
 });
