@@ -27,8 +27,20 @@ export function bracketSvg(t) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${l.width}" height="${l.height}" viewBox="0 0 ${l.width} ${l.height}"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#141023"/><stop offset="1" stop-color="#080a12"/></linearGradient><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#a788d0" stroke-opacity=".06"/></pattern></defs><rect width="100%" height="100%" fill="url(#bg)"/><rect width="100%" height="100%" fill="url(#grid)"/><g font-family="Arial, Microsoft YaHei, sans-serif">${text(48,66,'MUSIC CUP',32)}${text(48,103,`${t.songs[0]?.artist || '我的音乐'} · ${t.songs.length} 首单曲 · ${Object.keys(t.winners).length}/${t.songs.length-1} 场已完成`,16,'#b6a4ce')}${text(l.width/2,154,'THE FINAL · 总决赛',20,'#d5b4ff','text-anchor="middle"')}${l.edges.map(e=>`<path d="M${e.x1} ${e.y1}H${(e.x1+e.x2)/2}V${e.y2}H${e.x2}" fill="none" stroke="${e.active?'#b989ff':'#514368'}" stroke-width="2"/>`).join('')}${l.nodes.map(n=>`<g data-match="${n.id}"><rect x="${n.x}" y="${n.y}" width="300" height="124" rx="12" fill="#14121f" stroke="${n.r===Math.log2(t.songs.length)-1?'#dab9ff':'#504060'}"/>${n.teams.map((s,i)=>`${s&&s.id===n.winner?`<rect x="${n.x+2}" y="${n.y+i*62+2}" width="296" height="58" rx="10" fill="#392454"/>`:''}${fitted(n.x+18,n.y+i*62+27,s?.name||'等待上一轮胜者',16,s?.id===n.winner?'#eee0ff':'#ded6ea')}${fitted(n.x+18,n.y+i*62+48,s?.album||n.title,11,'#a99bbb')}`).join('')}</g>`).join('')}${text(48,l.height-28,'YOUR MUSIC. YOUR RULES.   /   左右汇聚 · 一个冠军',12,'#a497b6')}</g></svg>`;
 }
 
+export function portraitLayout(t) {
+  const rs=rounds(t),nodes=[],edges=[];
+  function visit(r,m,depth,parent) {
+    const node={...rs[r].seeds[m],r,m,title:rs[r].title,x:28+depth*30,y:210+nodes.length*204};
+    nodes.push(node);
+    if(parent) edges.push({x1:parent.x+14,y1:parent.y+176,x2:node.x,y2:node.y+88,active:true});
+    if(r>0){visit(r-1,m*2,depth+1,node);visit(r-1,m*2+1,depth+1,node);}
+  }
+  visit(rs.length-1,0,0,null);
+  return {width:720,height:280+nodes.length*204,nodes,edges};
+}
+
 export async function bracketPng(t) {
-  const l = bracketLayout(t);
+  const l = portraitLayout(t);
   const covers = new Map();
   await Promise.all(t.songs.map(async song => {
     if (!song.artwork || !song.artwork.startsWith('https://')) return;
@@ -47,21 +59,21 @@ export async function bracketPng(t) {
   for(let i=0;i<c.width;i+=32){x.beginPath();x.moveTo(i,0);x.lineTo(i,c.height);x.stroke();}
   for(let i=0;i<c.height;i+=32){x.beginPath();x.moveTo(0,i);x.lineTo(c.width,i);x.stroke();}
   function text(value,px,py,size=16,color='#eee7f7',max=280){x.font=`${size}px "Microsoft YaHei", Arial, sans-serif`;x.fillStyle=color;x.fillText(value,px,py,max);}
-  text('MUSIC CUP',48,64,32,'#e8d4ff',600);
-  text(`${t.songs[0]?.artist || ''} · ${t.songs.length} 首歌 · 我的冠军之路`,48,102,18,'#b7a5cb',900);
+  text('MUSIC CUP',28,58,32,'#e8d4ff',600);
+  text(`${t.songs[0]?.artist || ''} · ${t.songs.length} 首歌 · 我的冠军之路`,28,96,21,'#b7a5cb',900);
   const win=t.songs.find(s=>s.id===t.winners[`${Math.log2(t.songs.length)-1}-0`]);
-  x.textAlign='center';text('THE FINAL · 总决赛',c.width/2,154,20,'#d7bbff',320);x.textAlign='left';
-  for(const e of l.edges){x.strokeStyle=e.active?'#bd8df5':'#514368';x.lineWidth=2;x.beginPath();x.moveTo(e.x1,e.y1);x.lineTo((e.x1+e.x2)/2,e.y1);x.lineTo((e.x1+e.x2)/2,e.y2);x.lineTo(e.x2,e.y2);x.stroke();}
+  x.textAlign='center';text('THE FINAL · 总决赛',c.width/2,154,24,'#d7bbff',320);x.textAlign='left';
+  for(const e of l.edges){x.strokeStyle=e.active?'#bd8df5':'#514368';x.lineWidth=2;x.beginPath();x.moveTo(e.x1,e.y1);x.lineTo(e.x1,e.y2);x.lineTo(e.x2,e.y2);x.stroke();}
   for(const n of l.nodes){
-    x.fillStyle='#15121f';x.fillRect(n.x,n.y,300,124);x.strokeStyle=n.r===Math.log2(t.songs.length)-1?'#e0baff':'#685076';x.strokeRect(n.x,n.y,300,124);
+    x.fillStyle='#15121f';x.fillRect(n.x,n.y,510,176);x.strokeStyle=n.r===Math.log2(t.songs.length)-1?'#e0baff':'#685076';x.strokeRect(n.x,n.y,510,176);
     for(const [i,song] of n.teams.entries()){
-      const y=n.y+i*62;
-      if(song?.id===n.winner){x.fillStyle='#422958';x.fillRect(n.x+2,y+2,296,58);x.fillStyle='#c99cf8';x.fillRect(n.x+2,y+2,3,58);}
+      const y=n.y+i*88;
+      if(song?.id===n.winner){x.fillStyle='#422958';x.fillRect(n.x+2,y+2,506,84);x.fillStyle='#c99cf8';x.fillRect(n.x+2,y+2,3,84);}
       const cover=covers.get(song?.id);
-      if(cover)x.drawImage(cover,n.x+12,y+9,44,44);
-      else {x.fillStyle='#534063';x.fillRect(n.x+12,y+9,44,44);text('♫',n.x+24,y+38,24,'#dfc5ff',32);}
-      text(song?.name||'待定',n.x+66,y+27,15,'#f5edff',222);
-      text(song?.album||n.title,n.x+66,y+47,10,'#bdabc9',222);
+      if(cover)x.drawImage(cover,n.x+12,y+12,64,64);
+      else {x.fillStyle='#534063';x.fillRect(n.x+12,y+12,64,64);text('♫',n.x+30,y+55,30,'#dfc5ff',32);}
+      text(song?.name||'待定',n.x+90,y+37,25,'#f5edff',402);
+      text(song?.album||n.title,n.x+90,y+65,18,'#bdabc9',402);
     }
   }
   text(`CHAMPION  /  ${win?.name||'待定'}`,48,c.height-30,18,'#dbb8ff',c.width-96);

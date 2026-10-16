@@ -30,7 +30,7 @@ export function Cover({ song, className = "" }) {
     </span>
   );
 }
-export function Tournament({ t, onChoose }) {
+export function Tournament({ t, onChoose, onImageReady }) {
   const match = nextMatch(t);
   const champion = t.winners[`${Math.log2(t.songs.length)-1}-0`];
   const [chosen, setChosen] = useState(null);
@@ -44,22 +44,15 @@ export function Tournament({ t, onChoose }) {
     return () => clearTimeout(timer);
   }, [chosen, t]);
   useEffect(() => {
-    setImage(null); setError("");
+    setImage(null); onImageReady(null); setError("");
     if (!champion) return;
     let cancelled = false, url;
     bracketPng(t).then(blob => {
       if (cancelled) return;
-      url = URL.createObjectURL(blob); setImage({blob,url});
+      url = URL.createObjectURL(blob); setImage({blob,url}); onImageReady({blob,url});
     }).catch(() => { if (!cancelled) setError("赛树图片生成失败，请重试"); });
     return () => { cancelled=true; if(url) URL.revokeObjectURL(url); };
   }, [t, champion, retry]);
-  async function save() {
-    const file = new File([image.blob], "music-cup-full-bracket.png", {type:"image/png"});
-    try {
-      if (navigator.canShare?.({files:[file]})) await navigator.share({files:[file],title:"我的 MUSIC CUP 完整赛树"});
-      else downloadBlob(image.blob,file.name);
-    } catch(e) { if(e.name !== "AbortError") setError("请长按下方图片保存，或再次点击保存按钮。"); }
-  }
   if (!champion && match) return <section className="duel" aria-label="歌曲二选一">
     <div className="eyebrow">{match.title} · 第 {match.m+1} / {match.count} 场</div>
     <h2>这一刻，哪首更让你心动？</h2>
@@ -76,8 +69,8 @@ export function Tournament({ t, onChoose }) {
   </section>;
   return <section className="tree-result">
     <div className="tree-result-heading"><div><div className="eyebrow">THE COMPLETE JOURNEY</div><h2>冠军之路，每一步都算数。</h2></div>
-      <button className="primary" onClick={save} disabled={!image}><Download size={17}/>保存完整赛树</button></div>
-    <p>包含全部专辑封面与晋级结果 · 可左右滑动查看 · 手机也可长按图片保存</p>
+      </div>
+    <p>包含全部专辑封面与晋级结果 · 竖版适配手机 · 长按图片可保存</p>
     {error && <p role="alert">{error} <button onClick={()=>setRetry(x=>x+1)}>重新生成</button></p>}
     {!image && !error && <p role="status">正在生成带封面的完整赛树…</p>}
     {image && <div className="final-tree-scroll"><img className="final-tree-image" src={image.url} alt="完整音乐淘汰赛树，包含专辑封面和每场晋级结果" /></div>}
@@ -92,7 +85,14 @@ export function downloadBlob(blob, name) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
-export function Winner({ song, size, onClose, notify, shared = false }) {
+export function Winner({ song, size, onClose, notify, shared = false, treeImage }) {
+  async function saveTree() {
+    const file = new File([treeImage.blob], "music-cup-full-bracket.png", {type:"image/png"});
+    try {
+      if (navigator.canShare?.({files:[file]})) await navigator.share({files:[file],title:"我的 MUSIC CUP 完整赛树"});
+      else downloadBlob(treeImage.blob,file.name);
+    } catch(e) { if(e.name!=="AbortError") notify("请关闭冠军弹窗，长按赛树图片保存"); }
+  }
   async function share() {
     const u = new URL(location.href);
     u.hash = new URLSearchParams({
@@ -195,6 +195,7 @@ export function Winner({ song, size, onClose, notify, shared = false }) {
             在 iTunes 查看 <ExternalLink size={12} />
           </a>
         )}
+        {!shared && <button className="primary winner-tree-save" disabled={!treeImage} onClick={saveTree}><Download size={17}/>{treeImage ? "保存完整赛树" : "正在生成赛树…"}</button>}
         <div className="winner-actions">
           <button className="primary" onClick={poster}>
             <Download size={17} />

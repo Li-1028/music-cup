@@ -1874,3 +1874,8 @@ footer button {
  .duel {padding:28px 12px;}.duel h2{font-size:20px;}.duel-pair{grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);margin-top:24px;}.duel-card{border-radius:13px;}.duel-caption{padding:12px;}.duel-caption h3{font-size:16px;}.duel-caption p{font-size:11px;}.duel-vs{font-size:12px;}.duel-side{top:8px;left:8px;padding:5px;font-size:8px;}.duel-choose{font-size:11px;margin-top:14px;}.tree-result{padding:16px;}.tree-result h2{font-size:19px;}
 }
 @media(prefers-reduced-motion:reduce){.duel-card{animation:none;transition:none;}}
+.final-tree-scroll { overflow:visible;max-height:none;max-width:720px;margin:0 auto; }
+.final-tree-image { width:100%;max-width:100%;height:auto; }
+.winner-tree-save { width:100%;justify-content:center;margin-top:24px; }
+.winner-card { max-height:calc(100dvh - 32px);overflow-y:auto; }
+.winner-tree-save + .winner-actions { margin-top:12px; }

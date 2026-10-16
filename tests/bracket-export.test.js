@@ -18,3 +18,11 @@ test('export escapes song metadata and contains complete names',()=>{
  const t={songs:Array.from({length:16},(_,i)=>({id:String(i),name:'A & <B> "C"',artist:'Artist',album:'Original'})),winners:{}};
  const svg=bracketSvg(t);assert.ok(svg.includes('A &amp; &lt;B&gt; &quot;C&quot;'));assert.ok(!svg.includes('<B>'));
 });
+import {portraitLayout} from '../src/bracket-export.js';
+for(const size of [16,32,64]) test(`${size} portrait tree fits fixed mobile width with all branches`,()=>{
+ const t={songs:Array.from({length:size},(_,i)=>({id:String(i),name:`Song ${i}`,artist:'Test'})),winners:{}};
+ const l=portraitLayout(t);assert.equal(l.width,720);assert.equal(l.nodes.length,size-1);assert.equal(l.edges.length,size-2);
+ assert.ok(l.height>l.width);assert.ok(l.height<16384);
+ for(const n of l.nodes){assert.ok(n.x+510<=l.width);assert.ok(n.y+176<l.height);}
+ for(let i=1;i<l.nodes.length;i++)assert.ok(l.nodes[i].y>=l.nodes[i-1].y+176);
+});

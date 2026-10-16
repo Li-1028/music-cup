@@ -66,6 +66,7 @@ function sharedWinner() {
   }
 }
 export default function App() {
+  const [treeImage,setTreeImage] = useState(null);
   const [saved] = useState(restore),
     [artist, setArtist] = useState(saved.artist || null),
     [songs, setSongs] = useState(
@@ -747,7 +748,7 @@ export default function App() {
             />
           </div>
           <div className="canvas-shell">
-            <Tournament t={t} onChoose={pick} />
+            <Tournament t={t} onChoose={pick} onImageReady={setTreeImage} />
           </div>
           <div className="arena-footer">
             <span>
@@ -801,6 +802,7 @@ export default function App() {
       {showWinner && champion && (
         <Winner
           song={champion}
+          treeImage={treeImage}
           size={t.songs.length}
           onClose={() => setShowWinner(false)}
           notify={notify}
