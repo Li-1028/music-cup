@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bracket, Seed, SeedItem } from "@oliverlooney/react-brackets";
+import { Bracket, Seed, SeedItem, SingleLineSeed } from "@oliverlooney/react-brackets";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
   Trophy,
@@ -13,6 +13,7 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
+import { bracketPng } from "./bracket-export.js";
 import { rounds, safeUrl } from "./domain.js";
 export function Cover({ song, className = "" }) {
   const [failed, setFailed] = useState(false);
@@ -32,9 +33,20 @@ export function Cover({ song, className = "" }) {
   );
 }
 export function Tournament({ t, onChoose }) {
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+  async function saveTree() {
+    setExporting(true); setExportError("");
+    try { downloadBlob(await bracketPng(t), "music-cup-full-bracket.png"); }
+    catch { setExportError("图片生成失败，请重试"); }
+    finally { setExporting(false); }
+  }
   const rs = rounds(t);
-  const renderSeed = ({ seed, breakpoint, roundIndex, seedIndex }) => (
-    <Seed
+  const renderSeed = ({ seed, breakpoint }) => {
+    const [roundIndex, seedIndex] = seed.id.split("-").map(Number);
+    const Wrapper = roundIndex >= rs.length - 2 ? SingleLineSeed : Seed;
+    return (
+    <Wrapper
       mobileBreakpoint={breakpoint}
       style={{ fontSize: 13, padding: "14px 24px", width: 280 }}
     >
@@ -45,7 +57,7 @@ export function Tournament({ t, onChoose }) {
           borderRadius: 12,
         }}
       >
-        <div className="match" data-match={seed.id}>
+        <div className={`match ${roundIndex === rs.length - 1 ? "final-match" : ""}`} data-match={seed.id}>
           {seed.teams.map((song, i) => (
             <button
               key={i}
@@ -73,15 +85,16 @@ export function Tournament({ t, onChoose }) {
           ))}
         </div>
       </SeedItem>
-    </Seed>
+    </Wrapper>
   );
+  };
   return (
     <TransformWrapper
-      initialScale={0.8}
+      initialScale={0.65}
       minScale={0.15}
       maxScale={1.7}
       limitToBounds={false}
-      centerOnInit={false}
+      centerOnInit={true}
       initialPositionX={12}
       initialPositionY={20}
       panning={{ excluded: ["button", "a"] }}
@@ -91,7 +104,9 @@ export function Tournament({ t, onChoose }) {
       {({ zoomIn, zoomOut, resetTransform, centerView }) => (
         <>
           <div className="canvas-controls">
-            <span>拖动画布 · 双指缩放</span>
+            <span>左右汇聚 · 拖动探索</span>
+            <button className="export-tree" onClick={saveTree} disabled={exporting}><Download size={15} />{exporting ? "正在生成…" : "保存完整赛树"}</button>
+            {exportError && <span role="alert">{exportError}</span>}
             <button aria-label="缩小赛树" onClick={() => zoomOut()}>
               <Minus size={17} />
             </button>
@@ -108,12 +123,13 @@ export function Tournament({ t, onChoose }) {
             contentClass="bracket-content"
           >
             <Bracket
+              twoSided
               rounds={rs}
               mobileBreakpoint={0}
               renderSeedComponent={renderSeed}
               roundTitleComponent={(title, index) => (
                 <div className="round-title">
-                  <span>ROUND 0{index + 1}</span>
+                  <span>{title === "总决赛" ? "THE FINAL" : "ROAD TO CHAMPION"}</span>
                   <strong>{title}</strong>
                 </div>
               )}

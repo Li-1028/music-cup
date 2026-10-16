@@ -334,11 +334,12 @@ export default function App() {
                 </span>
                 <span>
                   <Trophy size={14} />
-                  专属冠军海报
+                  完整赛树导出
                 </span>
               </div>
             </div>
             <div className="record-scene" aria-hidden="true">
+              <div className="signal-grid" /><div className="spectrum">{Array.from({length:32},(_,i)=><i key={i} style={{"--bar":`${18 + Math.abs(Math.sin(i*1.7))*58}px`,"--delay":`${i*.08}s`}} />)}</div>
               <div className="orbit orbit-one" />
               <div className="orbit orbit-two" />
               <div className="record">
