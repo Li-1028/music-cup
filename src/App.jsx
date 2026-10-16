@@ -705,7 +705,7 @@ export default function App() {
               <h1>
                 每一次选择，<span>都算数。</span>
               </h1>
-              <p>点击歌曲晋级 · 改选会清空受影响的后续结果</p>
+              <p>逐场二选一 · 选出冠军后查看完整赛树</p>
               {originalsOnly(t.songs).length !== t.songs.length && (
                 <p className="originals-notice">
                   此为旧赛事，含已过滤版本。请返回歌库重新抽签，使用专辑原版歌单。
@@ -842,7 +842,7 @@ export default function App() {
             <ol>
               <li>搜索歌手并选择正确的音乐人；曲库会自动补全。</li>
               <li>勾选歌曲，选择 16 / 32 / 64 首规模并抽签。</li>
-              <li>在赛树中点击更喜欢的歌曲，一路选出冠军。</li>
+              <li>每场点击更喜欢的歌曲卡片，自动进入下一场；冠军产生后可查看并保存带封面的完整赛树。</li>
               <li>导出原创冠军海报，或分享冠军链接给朋友。</li>
             </ol>
             <p>

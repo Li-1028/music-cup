@@ -1841,3 +1841,36 @@ footer button {
 @media (max-width: 720px) {
   .workspace > .setup-card { order: -1; }
 }
+.duel { padding:40px 24px 48px;text-align:center; }
+.duel > .eyebrow { justify-content:center; }
+.duel h2 { font-size:26px;letter-spacing:-.6px;margin:14px 0 8px; }
+.duel > p,.tree-result > p { color:#a699b6;font-size:12px;line-height:1.8; }
+.duel-pair { display:grid;grid-template-columns:minmax(0,340px) 56px minmax(0,340px);justify-content:center;align-items:center;margin:30px auto 0; }
+.duel-card { display:block;text-align:left;padding:0;overflow:hidden;border-radius:20px;border:1px solid #9171ad55;background:linear-gradient(140deg,#281d36,#13121d);box-shadow:0 20px 50px #0005;animation:card-enter .35s ease both;transition:transform .3s,box-shadow .3s,opacity .3s; }
+.duel-card:hover:not(:disabled) { transform:translateY(-5px);border-color:#c59af8;box-shadow:0 20px 55px #8956c733; }
+.duel-card:disabled { opacity:1;cursor:default; }
+.duel-card.picked { transform:translateY(-4px);border-color:#e0baff;box-shadow:0 0 0 3px #bb8aff33,0 12px 60px #b47bff44; }
+.duel-card.passed { opacity:.42;transform:scale(.96); }
+.duel-art { position:relative;aspect-ratio:1; }
+.duel-art .cover { width:100%;height:100%;border-radius:0; }
+.duel-art .cover img { width:100%;height:100%;object-fit:cover; }
+.duel-art .cover > svg { width:72px;height:72px; }
+.duel-side { position:absolute;top:14px;left:14px;background:#0c0819b8;padding:7px 10px;border:1px solid #ffffff33;border-radius:6px;font:10px "Space Grotesk",sans-serif;letter-spacing:2px;backdrop-filter:blur(8px); }
+.duel-check { position:absolute;inset:0;display:grid;place-items:center;background:#5b308477; }
+.duel-check svg { background:#d9b9ff;color:#2a153a;border-radius:50%;width:58px;height:58px;padding:12px; }
+.duel-caption { padding:22px; }
+.duel-caption h3 { margin:0 0 9px;font-size:23px;overflow-wrap:anywhere;line-height:1.35; }
+.duel-caption p { color:#b9a8c7;margin:0 0 6px;font-size:13px;overflow-wrap:anywhere; }
+.duel-caption > span { font-size:11px;color:#96859f; }
+.duel-choose { display:flex;justify-content:space-between;margin-top:20px;padding-top:15px;border-top:1px solid #ffffff12;color:#d9b8ff;font-size:13px; }
+.duel-vs { font:italic 600 18px "Space Grotesk",sans-serif;color:#a083bb;text-shadow:0 0 20px #b47bff66; }
+.tree-result { padding:24px; }
+.tree-result-heading { display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap; }
+.tree-result h2 { font-size:22px; }
+.final-tree-scroll { overflow:auto;max-height:75vh;border:1px solid #69507855;border-radius:12px;-webkit-overflow-scrolling:touch; }
+.final-tree-image { display:block;width:auto;max-width:none;height:auto; }
+@keyframes card-enter { from {opacity:0;transform:translateY(14px);} to {opacity:1;transform:translateY(0);} }
+@media(max-width:720px) {
+ .duel {padding:28px 12px;}.duel h2{font-size:20px;}.duel-pair{grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);margin-top:24px;}.duel-card{border-radius:13px;}.duel-caption{padding:12px;}.duel-caption h3{font-size:16px;}.duel-caption p{font-size:11px;}.duel-vs{font-size:12px;}.duel-side{top:8px;left:8px;padding:5px;font-size:8px;}.duel-choose{font-size:11px;margin-top:14px;}.tree-result{padding:16px;}.tree-result h2{font-size:19px;}
+}
+@media(prefers-reduced-motion:reduce){.duel-card{animation:none;transition:none;}}

@@ -28,12 +28,42 @@ export function bracketSvg(t) {
 }
 
 export async function bracketPng(t) {
-  const url = URL.createObjectURL(new Blob([bracketSvg(t)], {type:'image/svg+xml;charset=utf-8'}));
-  try {
-    const img = new Image();
-    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('图片生成失败'));img.src=url;});
-    const c = document.createElement('canvas'); c.width=img.width;c.height=img.height;
-    c.getContext('2d').drawImage(img,0,0);
-    return await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('图片生成失败')),'image/png'));
-  } finally { URL.revokeObjectURL(url); }
+  const l = bracketLayout(t);
+  const covers = new Map();
+  await Promise.all(t.songs.map(async song => {
+    if (!song.artwork || !song.artwork.startsWith('https://')) return;
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    await new Promise(resolve => {
+      const timer = setTimeout(()=>{img.src='';resolve();},8000);
+      img.onload = () => {clearTimeout(timer);covers.set(song.id,img);resolve();};
+      img.onerror = () => {clearTimeout(timer);resolve();}; img.src=song.artwork;
+    });
+  }));
+  const c=document.createElement('canvas');c.width=l.width;c.height=l.height;
+  const x=c.getContext('2d');
+  const gradient=x.createLinearGradient(0,0,c.width,c.height);gradient.addColorStop(0,'#20152e');gradient.addColorStop(1,'#080b14');
+  x.fillStyle=gradient;x.fillRect(0,0,c.width,c.height);
+  x.strokeStyle='#ffffff08';x.lineWidth=1;
+  for(let i=0;i<c.width;i+=32){x.beginPath();x.moveTo(i,0);x.lineTo(i,c.height);x.stroke();}
+  for(let i=0;i<c.height;i+=32){x.beginPath();x.moveTo(0,i);x.lineTo(c.width,i);x.stroke();}
+  function text(value,px,py,size=16,color='#eee7f7',max=280){x.font=`${size}px "Microsoft YaHei", Arial, sans-serif`;x.fillStyle=color;x.fillText(value,px,py,max);}
+  text('MUSIC CUP',48,64,32,'#e8d4ff',600);
+  text(`${t.songs[0]?.artist || ''} · ${t.songs.length} 首歌 · 我的冠军之路`,48,102,18,'#b7a5cb',900);
+  const win=t.songs.find(s=>s.id===t.winners[`${Math.log2(t.songs.length)-1}-0`]);
+  x.textAlign='center';text('THE FINAL · 总决赛',c.width/2,154,20,'#d7bbff',320);x.textAlign='left';
+  for(const e of l.edges){x.strokeStyle=e.active?'#bd8df5':'#514368';x.lineWidth=2;x.beginPath();x.moveTo(e.x1,e.y1);x.lineTo((e.x1+e.x2)/2,e.y1);x.lineTo((e.x1+e.x2)/2,e.y2);x.lineTo(e.x2,e.y2);x.stroke();}
+  for(const n of l.nodes){
+    x.fillStyle='#15121f';x.fillRect(n.x,n.y,300,124);x.strokeStyle=n.r===Math.log2(t.songs.length)-1?'#e0baff':'#685076';x.strokeRect(n.x,n.y,300,124);
+    for(const [i,song] of n.teams.entries()){
+      const y=n.y+i*62;
+      if(song?.id===n.winner){x.fillStyle='#422958';x.fillRect(n.x+2,y+2,296,58);x.fillStyle='#c99cf8';x.fillRect(n.x+2,y+2,3,58);}
+      const cover=covers.get(song?.id);
+      if(cover)x.drawImage(cover,n.x+12,y+9,44,44);
+      else {x.fillStyle='#534063';x.fillRect(n.x+12,y+9,44,44);text('♫',n.x+24,y+38,24,'#dfc5ff',32);}
+      text(song?.name||'待定',n.x+66,y+27,15,'#f5edff',222);
+      text(song?.album||n.title,n.x+66,y+47,10,'#bdabc9',222);
+    }
+  }
+  text(`CHAMPION  /  ${win?.name||'待定'}`,48,c.height-30,18,'#dbb8ff',c.width-96);
+  return new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('图片生成失败')),'image/png'));
 }

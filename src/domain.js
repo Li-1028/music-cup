@@ -122,3 +122,11 @@ export function sanitizeSong(s) {
     url: safeUrl(s.url),
   };
 }
+
+export function nextMatch(t) {
+  for (const [r, round] of rounds(t).entries()) {
+    const m = round.seeds.findIndex(seed => !seed.winner && seed.teams.every(Boolean));
+    if (m >= 0) return {...round.seeds[m], r, m, title:round.title, count:round.seeds.length};
+  }
+  return null;
+}

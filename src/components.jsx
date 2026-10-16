@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-import { Bracket, Seed, SeedItem, SingleLineSeed } from "@oliverlooney/react-brackets";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import React, { useState, useEffect } from "react";
 import {
   Trophy,
   Music2,
@@ -14,7 +12,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { bracketPng } from "./bracket-export.js";
-import { rounds, safeUrl } from "./domain.js";
+import { rounds, safeUrl, nextMatch } from "./domain.js";
 export function Cover({ song, className = "" }) {
   const [failed, setFailed] = useState(false);
   return (
@@ -33,120 +31,66 @@ export function Cover({ song, className = "" }) {
   );
 }
 export function Tournament({ t, onChoose }) {
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState("");
-  async function saveTree() {
-    setExporting(true); setExportError("");
-    try { downloadBlob(await bracketPng(t), "music-cup-full-bracket.png"); }
-    catch { setExportError("图片生成失败，请重试"); }
-    finally { setExporting(false); }
+  const match = nextMatch(t);
+  const champion = t.winners[`${Math.log2(t.songs.length)-1}-0`];
+  const [chosen, setChosen] = useState(null);
+  const [image, setImage] = useState(null);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+  useEffect(() => { setChosen(null); }, [t]);
+  useEffect(() => {
+    if (!chosen || !match) return;
+    const timer = setTimeout(() => onChoose(match.r, match.m, chosen), 360);
+    return () => clearTimeout(timer);
+  }, [chosen, t]);
+  useEffect(() => {
+    setImage(null); setError("");
+    if (!champion) return;
+    let cancelled = false, url;
+    bracketPng(t).then(blob => {
+      if (cancelled) return;
+      url = URL.createObjectURL(blob); setImage({blob,url});
+    }).catch(() => { if (!cancelled) setError("赛树图片生成失败，请重试"); });
+    return () => { cancelled=true; if(url) URL.revokeObjectURL(url); };
+  }, [t, champion, retry]);
+  async function save() {
+    const file = new File([image.blob], "music-cup-full-bracket.png", {type:"image/png"});
+    try {
+      if (navigator.canShare?.({files:[file]})) await navigator.share({files:[file],title:"我的 MUSIC CUP 完整赛树"});
+      else downloadBlob(image.blob,file.name);
+    } catch(e) { if(e.name !== "AbortError") setError("请长按下方图片保存，或再次点击保存按钮。"); }
   }
-  const rs = rounds(t);
-  const renderSeed = ({ seed, breakpoint }) => {
-    const [roundIndex, seedIndex] = seed.id.split("-").map(Number);
-    const Wrapper = roundIndex >= rs.length - 2 ? SingleLineSeed : Seed;
-    return (
-    <Wrapper
-      mobileBreakpoint={breakpoint}
-      style={{ fontSize: 13, padding: "14px 24px", width: 280 }}
-    >
-      <SeedItem
-        style={{
-          background: "transparent",
-          boxShadow: "none",
-          borderRadius: 12,
-        }}
-      >
-        <div className={`match ${roundIndex === rs.length - 1 ? "final-match" : ""}`} data-match={seed.id}>
-          {seed.teams.map((song, i) => (
-            <button
-              key={i}
-              className={`match-song ${song && seed.winner === song.id ? "won" : ""}`}
-              disabled={!song || seed.teams.some((s) => !s)}
-              onClick={() => onChoose(roundIndex, seedIndex, song.id)}
-              aria-label={song ? `晋级 ${song.name}` : "等待上一轮胜者"}
-            >
-              {song ? (
-                <>
-                  <Cover song={song} />
-                  <span>
-                    <strong>{song.name}</strong>
-                    <small>{song.album}</small>
-                  </span>
-                  {seed.winner === song.id && <Check size={16} />}
-                </>
-              ) : (
-                <>
-                  <span className="pending-mark">?</span>
-                  <span className="muted">等待上一轮胜者</span>
-                </>
-              )}
-            </button>
-          ))}
-        </div>
-      </SeedItem>
-    </Wrapper>
-  );
-  };
-  return (
-    <TransformWrapper
-      initialScale={0.65}
-      minScale={0.15}
-      maxScale={1.7}
-      limitToBounds={false}
-      centerOnInit={true}
-      initialPositionX={12}
-      initialPositionY={20}
-      panning={{ excluded: ["button", "a"] }}
-      doubleClick={{ disabled: true }}
-      wheel={{ step: 0.08 }}
-    >
-      {({ zoomIn, zoomOut, resetTransform, centerView }) => (
-        <>
-          <div className="canvas-controls">
-            <span>左右汇聚 · 拖动探索</span>
-            <button className="export-tree" onClick={saveTree} disabled={exporting}><Download size={15} />{exporting ? "正在生成…" : "保存完整赛树"}</button>
-            {exportError && <span role="alert">{exportError}</span>}
-            <button aria-label="缩小赛树" onClick={() => zoomOut()}>
-              <Minus size={17} />
-            </button>
-            <button aria-label="放大赛树" onClick={() => zoomIn()}>
-              <Plus size={17} />
-            </button>
-            <button aria-label="赛树全景" onClick={() => centerView(0.25)}>
-              <Maximize size={17} />
-            </button>
-            <button onClick={() => resetTransform()}>重置视图</button>
-          </div>
-          <TransformComponent
-            wrapperClass="bracket-viewport"
-            contentClass="bracket-content"
-          >
-            <Bracket
-              twoSided
-              rounds={rs}
-              mobileBreakpoint={0}
-              renderSeedComponent={renderSeed}
-              roundTitleComponent={(title, index) => (
-                <div className="round-title">
-                  <span>{title === "总决赛" ? "THE FINAL" : "ROAD TO CHAMPION"}</span>
-                  <strong>{title}</strong>
-                </div>
-              )}
-            />
-          </TransformComponent>
-        </>
-      )}
-    </TransformWrapper>
-  );
+  if (!champion && match) return <section className="duel" aria-label="歌曲二选一">
+    <div className="eyebrow">{match.title} · 第 {match.m+1} / {match.count} 场</div>
+    <h2>这一刻，哪首更让你心动？</h2>
+    <p>点击封面选择 · 自动进入下一场</p>
+    <div className="duel-pair" key={match.id}>
+      {match.teams.map((song,i)=><React.Fragment key={song.id}>
+        {i===1 && <span className="duel-vs" aria-hidden="true">VS</span>}
+        <button className={`duel-card ${chosen===song.id ? "picked" : ""} ${chosen && chosen!==song.id ? "passed" : ""}`} disabled={!!chosen} onClick={()=>setChosen(song.id)} aria-label={`选择 ${song.name}`}>
+          <div className="duel-art"><Cover song={song}/><span className="duel-side">{i===0?"SIDE A":"SIDE B"}</span>{chosen===song.id && <span className="duel-check"><Check size={28}/></span>}</div>
+          <div className="duel-caption"><h3>{song.name}</h3><p>{song.album}</p><span>{song.artist}</span><div className="duel-choose">{chosen===song.id ? "已选中 · 晋级" : "选这首"} <ArrowIcon/></div></div>
+        </button>
+      </React.Fragment>)}
+    </div>
+  </section>;
+  return <section className="tree-result">
+    <div className="tree-result-heading"><div><div className="eyebrow">THE COMPLETE JOURNEY</div><h2>冠军之路，每一步都算数。</h2></div>
+      <button className="primary" onClick={save} disabled={!image}><Download size={17}/>保存完整赛树</button></div>
+    <p>包含全部专辑封面与晋级结果 · 可左右滑动查看 · 手机也可长按图片保存</p>
+    {error && <p role="alert">{error} <button onClick={()=>setRetry(x=>x+1)}>重新生成</button></p>}
+    {!image && !error && <p role="status">正在生成带封面的完整赛树…</p>}
+    {image && <div className="final-tree-scroll"><img className="final-tree-image" src={image.url} alt="完整音乐淘汰赛树，包含专辑封面和每场晋级结果" /></div>}
+  </section>;
 }
+function ArrowIcon() { return <span aria-hidden="true">↗</span>; }
 export function downloadBlob(blob, name) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 export function Winner({ song, size, onClose, notify, shared = false }) {
   async function share() {
