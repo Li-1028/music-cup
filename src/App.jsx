@@ -27,6 +27,7 @@ import {
   safeUrl,
 } from "./domain.js";
 import { searchArtists, loadCatalog } from "./catalog.js";
+import { originalsOnly } from "./originals.js";
 import { Cover, Tournament, Winner, downloadBlob } from "./components.jsx";
 const KEY = "music-cup:v1";
 function restore() {
@@ -37,6 +38,7 @@ function restore() {
       return { restoreError: true };
     return {
       ...d,
+      songs: originalsOnly(Array.isArray(d.songs) ? d.songs : []),
       tournament: d.tournament
         ? { ...d.tournament, songs: d.tournament.songs.map(sanitizeSong) }
         : null,
@@ -585,7 +587,7 @@ export default function App() {
                   )}
                   <p className="source-note">
                     曲目与封面来自
-                    iTunes。公开曲库受地区与版权限制，可能缺少部分作品；同名重发合并，现场等不同版本保留。
+                    iTunes。仅保留专辑原版：过滤现场、混音、伴奏和重制版本，合并重复发行并优先普通专辑。版本识别依据曲名和专辑标签，平台信息不全时可能仍有遗漏。
                   </p>
                 </>
               ) : (
@@ -703,6 +705,11 @@ export default function App() {
                 每一次选择，<span>都算数。</span>
               </h1>
               <p>点击歌曲晋级 · 改选会清空受影响的后续结果</p>
+              {originalsOnly(t.songs).length !== t.songs.length && (
+                <p className="originals-notice">
+                  此为旧赛事，含已过滤版本。请返回歌库重新抽签，使用专辑原版歌单。
+                </p>
+              )}
             </div>
             <div className="arena-actions">
               <span className="pill">

@@ -1,4 +1,4 @@
-import { dedupe } from "./domain.js";
+import { originalsOnly } from "./originals.js";
 let seq = 0;
 const cache = new Map();
 export function request(params, signal) {
@@ -56,7 +56,7 @@ export async function searchArtists(term, country, signal) {
     }));
 }
 export function normalizeTracks(items, artist) {
-  return dedupe(
+  return originalsOnly(
     items
       .filter(
         (s) => s.kind === "song" && String(s.artistId) === String(artist.id),

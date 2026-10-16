@@ -7,7 +7,7 @@
 ## 功能
 
 - 搜索音乐人并选择准确歌手 ID；iTunes 真实歌曲、专辑封面和商店链接。
-- 歌手歌曲查询 + 最多 200 张专辑分批补全；地区可选，默认香港；按歌手/规范化歌名合并重复发行，保留现场等名称不同的版本。
+- 歌手歌曲查询 + 最多 200 张专辑分批补全；地区可选，默认香港；仅保留专辑原版；过滤现场、演唱会、混音、伴奏、重制等版本。重复发行优先普通专辑，其次原始单曲和豪华版中的未修改曲目。
 - 单列选歌、搜索过滤、全选、清空、随机选歌；16 / 32 / 64 首随机抽签。
 - 完整分叉淘汰树，可拖动、缩放和点击晋级；支持撤销，修改早期胜者会清空受影响的后续结果。
 - 自动本地保存，JSON 赛事备份/导入，冠军展示、原创 PNG 海报、冠军分享链接。
@@ -37,7 +37,7 @@ npm run preview
 
 ## 数据与边界
 
-[Apple iTunes Search API](https://performance-partners.apple.com/search-api) 提供公开音乐元数据。JSONP 解决浏览器跨域，无私钥、无服务端代理。网络错误、地区版权、限流或最多 200 张专辑的接口上限可能使曲库不完整。页面显示已获取的真实数量、补全进度与失败提示；可以停止补全并使用已有歌曲。不同语言的曲名可能被视为不同条目；同名不同演出的准确识别不在第一版范围。
+[Apple iTunes Search API](https://performance-partners.apple.com/search-api) 提供公开音乐元数据。JSONP 解决浏览器跨域，无私钥、无服务端代理。网络错误、地区版权、限流或最多 200 张专辑的接口上限可能使曲库不完整。页面显示已获取的真实数量、补全进度与失败提示；可以停止补全并使用已有歌曲。不同语言的曲名可能被视为不同条目；版本过滤依据曲名与专辑标签，未标注的特殊版本仍可能漏过。旧赛事保留原有进度，返回歌库重新抽签后应用原版规则。
 
 专辑图片属于原权利人，链接回对应商店。本站不下载或缓存音频、不提供全曲播放。PNG 导出只包含原创视觉和冠军文字，不复制专辑图。分享链接仅包含冠军歌名、歌手和赛事规模，不传送完整赛事；跨设备恢复请导入 JSON。
 
@@ -56,3 +56,4 @@ npm run preview
 应用代码使用 MIT。赛树复用 [@oliverlooney/react-brackets](https://github.com/Oliver-Looney/react-brackets)（MIT，源于 mohux/react-brackets），画布复用 react-zoom-pan-pinch（MIT）。详细说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 为兼容 React 18，使用 swipeable-views React 18 fork；通过 package overrides 升级旧传递依赖 `@babel/runtime`，修复缺失 helper 和已知漏洞。
+
